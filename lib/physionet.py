@@ -290,12 +290,14 @@ def patch_variable_time_collate_fn(batch, args, device = torch.device("cpu"), da
 	"""
 
 	D = batch[0][2].shape[1]
+	# 把tt时序进行去重排序，并且保留之前的index
 	combined_tt, inverse_indices = torch.unique(torch.cat([ex[1] for ex in batch]), sorted=True, return_inverse=True)
 
-	# the number of observed time points 
+	# the number of observed time points 取出一个history窗口的观察时间
 	n_observed_tp = torch.lt(combined_tt, args.history).sum()
 	observed_tp = combined_tt[:n_observed_tp] # (n_observed_tp, )
 
+	# 对时间进行切片
 	patch_indices = []
 	st, ed = 0, args.patch_size
 	for i in range(args.npatch):
